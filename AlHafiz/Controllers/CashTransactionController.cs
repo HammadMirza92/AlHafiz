@@ -1,4 +1,5 @@
 ﻿using AlHafiz.DTOs;
+using AlHafiz.Enums;
 using AlHafiz.Models;
 using AlHafiz.Services.IRepository;
 using Microsoft.AspNetCore.Mvc;
@@ -100,6 +101,12 @@ namespace AlHafiz.Controllers
             var cashTransactionsDto = cashTransactions.Select(MapCashTransactionToDto);
 
             return Ok(cashTransactionsDto);
+        }
+        [HttpPost("update-balance")]
+        public async Task<IActionResult> UpdateBalance([FromBody] UpdateBalanceDto updateBalanceDto)
+        {
+            await _cashTransactionRepository.UpdateBalanceAsync(updateBalanceDto.CustomerId, updateBalanceDto.PaymentType, updateBalanceDto.AmountSpent);
+            return NoContent();
         }
 
         private CashTransactionDto MapCashTransactionToDto(CashTransaction cashTransaction)

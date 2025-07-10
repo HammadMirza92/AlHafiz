@@ -49,26 +49,44 @@ namespace AlHafiz.Services.Repository
                     .ThenInclude(vi => vi.Item)
                 .AsQueryable();
 
+            // Filter by FromDate
             if (filter.FromDate.HasValue)
                 query = query.Where(v => v.CreatedAt >= filter.FromDate.Value);
 
+            // Filter by ToDate
             if (filter.ToDate.HasValue)
             {
                 var toDatePlusOne = filter.ToDate.Value.AddDays(1);
                 query = query.Where(v => v.CreatedAt < toDatePlusOne);
             }
 
+            // Filter by CustomerId
             if (filter.CustomerId.HasValue)
                 query = query.Where(v => v.CustomerId == filter.CustomerId.Value);
 
+            // Filter by ExpenseHeadId
             if (filter.ExpenseHeadId.HasValue)
                 query = query.Where(v => v.ExpenseHeadId == filter.ExpenseHeadId.Value);
 
+            // Filter by VoucherType with special case for Purchase
             if (filter.VoucherType.HasValue)
-                query = query.Where(v => v.VoucherType == filter.VoucherType.Value);
+            {
+                if (filter.VoucherType.Value == VoucherType.Purchase)
+                {
+                    // Fetch vouchers of type Purchase or type 1 (Purchase)
+                    query = query.Where(v => v.VoucherType == VoucherType.Purchase || v.VoucherType == (VoucherType)1);
+                }
+                else
+                {
+                    // Filter by specific VoucherType
+                    query = query.Where(v => v.VoucherType == filter.VoucherType.Value);
+                }
+            }
 
+            // Return the filtered results
             return await query.ToListAsync();
         }
+
 
         public async Task<Voucher> CreateVoucherWithItemsAsync(Voucher voucher, IEnumerable<VoucherItem> voucherItems)
         {
@@ -141,6 +159,39 @@ namespace AlHafiz.Services.Repository
                     throw;
                 }
             }
+        }
+        public async Task SetItemRateForCustomerAsync(int customerId, int itemId, decimal rate)
+        {
+            var voucher = await _context.Vouchers
+                .FirstOrDefaultAsync(v => v.CustomerId == customerId);
+
+            if (voucher != null)
+            {
+                var voucherItem = await _context.VoucherItems
+                    .FirstOrDefaultAsync(vi => vi.VoucherId == voucher.Id && vi.ItemId == itemId);
+
+                if (voucherItem != null)
+                {
+                    voucherItem.Rate = rate;
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+
+
+        public async Task<IEnumerable<Voucher>> FilterVouchersByPaymentTypeAndDateAsync(PaymentType paymentType, DateTime? fromDate, DateTime? toDate)
+        {
+            var query = _context.Vouchers
+                .Where(v => v.PaymentType == paymentType)
+                .AsQueryable();
+
+            if (fromDate.HasValue)
+                query = query.Where(v => v.CreatedAt >= fromDate.Value);
+
+            if (toDate.HasValue)
+                query = query.Where(v => v.CreatedAt <= toDate.Value);
+
+            return await query.ToListAsync();
         }
 
         public async Task<Voucher> UpdateVoucherWithItemsAsync(Voucher voucher, IEnumerable<VoucherItem> voucherItems)

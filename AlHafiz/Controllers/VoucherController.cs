@@ -1,4 +1,5 @@
 ﻿using AlHafiz.DTOs;
+using AlHafiz.Enums;
 using AlHafiz.Models;
 using AlHafiz.Services.IRepository;
 using Microsoft.AspNetCore.Mvc;
@@ -146,6 +147,14 @@ namespace AlHafiz.Controllers
 
             return NoContent();
         }
+        [HttpGet("filter-vouchers")]
+        public async Task<ActionResult<IEnumerable<VoucherDto>>> FilterVouchers([FromQuery] PaymentType paymentType, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+        {
+            var vouchers = await _voucherRepository.FilterVouchersByPaymentTypeAndDateAsync(paymentType, fromDate, toDate);
+            var vouchersDto = vouchers.Select(MapVoucherToDto);
+
+            return Ok(vouchersDto);
+        }
 
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<VoucherDto>>> FilterVouchers([FromQuery] VoucherFilterDto filter)
@@ -154,6 +163,12 @@ namespace AlHafiz.Controllers
             var vouchersDto = vouchers.Select(MapVoucherToDto);
 
             return Ok(vouchersDto);
+        }
+        [HttpPost("set-rate")]
+        public async Task<IActionResult> SetRate([FromBody] SetRateDto setRateDto)
+        {
+            await _voucherRepository.SetItemRateForCustomerAsync(setRateDto.CustomerId, setRateDto.ItemId, setRateDto.Rate);
+            return NoContent();
         }
 
         private VoucherDto MapVoucherToDto(Voucher voucher)

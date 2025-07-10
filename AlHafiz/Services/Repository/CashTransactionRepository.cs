@@ -1,5 +1,6 @@
 ﻿using AlHafiz.AppDbContext;
 using AlHafiz.DTOs;
+using AlHafiz.Enums;
 using AlHafiz.Models;
 using AlHafiz.Services.IRepository;
 using AlHafiz.Services.Repository.Base;
@@ -27,6 +28,45 @@ namespace AlHafiz.Services.Repository
                 .Include(ct => ct.Customer)
                 .Include(ct => ct.Bank)
                 .FirstOrDefaultAsync(ct => ct.Id == id);
+        }
+        public async Task<BalanceTransaction> GetLatestBalanceAsync(int customerId, PaymentType paymentType)
+        {
+            return await _context.BalanceTransactions
+                .Where(bt => bt.CustomerId == customerId && bt.PaymentType == paymentType)
+                .OrderByDescending(bt => bt.Date)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task UpdateBalanceAsync(int customerId, PaymentType paymentType, decimal amountSpent)
+        {
+            var latestBalance = await GetLatestBalanceAsync(customerId, paymentType);
+            decimal newBalance = latestBalance?.ClosingBalance ?? 0 - amountSpent;
+
+            var newBalanceTransaction = new BalanceTransaction
+            {
+                CustomerId = customerId,
+                PaymentType = paymentType,
+                OpeningBalance = newBalance,
+                ClosingBalance = newBalance - amountSpent,
+                Date = DateTime.Now
+            };
+
+            await _context.BalanceTransactions.AddAsync(newBalanceTransaction);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<IEnumerable<CashTransaction>> GetTransactionsByCustomerAndDateAsync(int customerId, DateTime? fromDate, DateTime? toDate, PaymentType paymentType)
+        {
+            var query = _context.CashTransactions
+                .Where(ct => ct.CustomerId == customerId && ct.PaymentType == paymentType)
+                .AsQueryable();
+
+            if (fromDate.HasValue)
+                query = query.Where(ct => ct.CreatedAt >= fromDate.Value);
+
+            if (toDate.HasValue)
+                query = query.Where(ct => ct.CreatedAt <= toDate.Value);
+
+            return await query.ToListAsync();
         }
 
         public async Task<IEnumerable<CashTransaction>> FilterCashTransactionsAsync(CashTransactionFilterDto filter)
