@@ -4,6 +4,7 @@ using AlHafiz.Enums;
 using AlHafiz.Models;
 using AlHafiz.Services.IRepository;
 using AlHafiz.Services.Repository.Base;
+using Microsoft.DotNet.Scaffolding.Shared.CodeModifier.CodeChange;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlHafiz.Services.Repository
@@ -160,24 +161,6 @@ namespace AlHafiz.Services.Repository
                 }
             }
         }
-        public async Task SetItemRateForCustomerAsync(int customerId, int itemId, decimal rate)
-        {
-            var voucher = await _context.Vouchers
-                .FirstOrDefaultAsync(v => v.CustomerId == customerId);
-
-            if (voucher != null)
-            {
-                var voucherItem = await _context.VoucherItems
-                    .FirstOrDefaultAsync(vi => vi.VoucherId == voucher.Id && vi.ItemId == itemId);
-
-                if (voucherItem != null)
-                {
-                    voucherItem.Rate = rate;
-                    await _context.SaveChangesAsync();
-                }
-            }
-        }
-
 
         public async Task<IEnumerable<Voucher>> FilterVouchersByPaymentTypeAndDateAsync(PaymentType paymentType, DateTime? fromDate, DateTime? toDate)
         {
@@ -192,6 +175,132 @@ namespace AlHafiz.Services.Repository
                 query = query.Where(v => v.CreatedAt <= toDate.Value);
 
             return await query.ToListAsync();
+        }
+        // Method to get predefined rate for customer-item combination
+        public async Task<decimal?> GetCustomerItemRateAsync(int customerId, int itemId)
+        {
+            var rate = await _context.CustomerItemRates
+                .FirstOrDefaultAsync(r => r.CustomerId == customerId && r.ItemId == itemId);
+            return rate?.Rate;
+        }
+
+        // Updated method to set item rate for customer (now updates the predefined rates table)
+        public async Task SetItemRateForCustomerAsync(int customerId, int itemId, decimal rate)
+        {
+            var existingRate = await _context.CustomerItemRates
+                .FirstOrDefaultAsync(r => r.CustomerId == customerId && r.ItemId == itemId);
+
+            if (existingRate != null)
+            {
+                // Update existing rate
+                existingRate.Rate = rate;
+                existingRate.UpdatedAt = DateTime.Now;
+                _context.CustomerItemRates.Update(existingRate);
+            }
+            else
+            {
+                // Create new rate
+                var newRate = new CustomerItemRate
+                {
+                    CustomerId = customerId,
+                    ItemId = itemId,
+                    Rate = rate,
+                    CreatedAt = DateTime.Now
+                };
+                _context.CustomerItemRates.Add(newRate);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        // Method to auto-populate rates when creating voucher items
+        public async Task<VoucherItem> CreateVoucherItemWithAutoRateAsync(VoucherItem voucherItem, int? customerId = null)
+        {
+            // If customer is provided and rate is not set, try to get predefined rate
+            if (customerId.HasValue && voucherItem.Rate == 0)
+            {
+                var predefinedRate = await GetCustomerItemRateAsync(customerId.Value, voucherItem.ItemId);
+                if (predefinedRate.HasValue)
+                {
+                    voucherItem.Rate = predefinedRate.Value;
+                }
+            }
+
+            // Calculate amount if rate is available
+            if (voucherItem.Rate > 0)
+            {
+                voucherItem.Amount = voucherItem.NetWeight * voucherItem.Rate;
+            }
+
+            voucherItem.CreatedAt = DateTime.Now;
+            _context.VoucherItems.Add(voucherItem);
+            await _context.SaveChangesAsync();
+
+            return voucherItem;
+        }
+
+        // Method to create voucher with auto-populated rates
+        public async Task<Voucher> CreateVoucherWithAutoRatesAsync(Voucher voucher, List<VoucherItem> voucherItems)
+        {
+            // Create the voucher first
+            voucher.CreatedAt = DateTime.Now;
+            _context.Vouchers.Add(voucher);
+            await _context.SaveChangesAsync();
+
+            // Create voucher items with auto-populated rates
+            foreach (var item in voucherItems)
+            {
+                item.VoucherId = voucher.Id;
+
+                // Auto-populate rate if not provided and customer exists
+                if (voucher.CustomerId.HasValue && item.Rate == 0)
+                {
+                    var predefinedRate = await GetCustomerItemRateAsync(voucher.CustomerId.Value, item.ItemId);
+                    if (predefinedRate.HasValue)
+                    {
+                        item.Rate = predefinedRate.Value;
+                    }
+                }
+
+                // Calculate amount
+                if (item.Rate > 0)
+                {
+                    item.Amount = item.NetWeight * item.Rate;
+                }
+
+                item.CreatedAt = DateTime.Now;
+                _context.VoucherItems.Add(item);
+            }
+
+            // Update voucher total amount
+            voucher.Amount = voucherItems.Sum(vi => vi.Amount);
+            _context.Vouchers.Update(voucher);
+
+            await _context.SaveChangesAsync();
+
+            // Return voucher with items
+            return await _context.Vouchers
+                .Include(v => v.VoucherItems)
+                .ThenInclude(vi => vi.Item)
+                .Include(v => v.Customer)
+                .FirstOrDefaultAsync(v => v.Id == voucher.Id);
+        }
+
+        // Method to get suggested rates for voucher creation
+        public async Task<Dictionary<int, decimal?>> GetSuggestedRatesForCustomerAsync(int customerId, List<int> itemIds)
+        {
+            var rates = await _context.CustomerItemRates
+                .Where(r => r.CustomerId == customerId && itemIds.Contains(r.ItemId))
+                .ToDictionaryAsync(r => r.ItemId, r => (decimal?)r.Rate);
+
+            // Fill in null values for items without predefined rates
+            var result = new Dictionary<int, decimal?>();
+            foreach (var itemId in itemIds)
+            {
+                result[itemId] = rates.ContainsKey(itemId) ? rates[itemId] : null;
+            }
+
+            return result;
         }
 
         public async Task<Voucher> UpdateVoucherWithItemsAsync(Voucher voucher, IEnumerable<VoucherItem> voucherItems)
