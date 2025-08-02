@@ -12,6 +12,7 @@
         public decimal DesiMan { get; set; }
         public decimal Rate { get; set; }
         public decimal Amount { get; set; }
+        public bool IsTrackStock { get; set; } = true;
     }
 
     public class CreateVoucherItemDto
@@ -23,6 +24,7 @@
         public decimal DesiMan { get; set; }
         public decimal Rate { get; set; }
         public decimal Amount { get; set; }
+        public bool isTrackStock { get; set; }
     }
 
     public class UpdateVoucherItemDto
@@ -35,5 +37,6 @@
         public decimal DesiMan { get; set; }
         public decimal Rate { get; set; }
         public decimal Amount { get; set; }
+        public bool IsTrackStock { get; set; } = true;
     }
 }

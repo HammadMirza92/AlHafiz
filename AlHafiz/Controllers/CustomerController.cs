@@ -23,7 +23,10 @@ namespace AlHafiz.Controllers
             var customersDto = customers.Select(c => new CustomerDto
             {
                 Id = c.Id,
-                Name = c.Name
+                Name = c.Name,
+                Description = c.Description,
+                PhoneNumber = c.PhoneNumber
+
             });
 
             return Ok(customers);
@@ -40,7 +43,9 @@ namespace AlHafiz.Controllers
             var customerDto = new CustomerDto
             {
                 Id = customer.Id,
-                Name = customer.Name
+                Name = customer.Name,
+                Description = customer.Description,
+                PhoneNumber = customer.PhoneNumber
             };
 
             return Ok(customerDto);
@@ -52,6 +57,8 @@ namespace AlHafiz.Controllers
             var customer = new Customer
             {
                 Name = createCustomerDto.Name,
+                Description = createCustomerDto.Description,
+                PhoneNumber = createCustomerDto.PhoneNumber,
                 CreatedAt = DateTime.Now
             };
 
@@ -60,7 +67,9 @@ namespace AlHafiz.Controllers
             var customerDto = new CustomerDto
             {
                 Id = createdCustomer.Id,
-                Name = createdCustomer.Name
+                Name = createdCustomer.Name,
+                Description = createCustomerDto.Description,
+                PhoneNumber = createCustomerDto.PhoneNumber
             };
 
             return CreatedAtAction(nameof(GetCustomer), new { id = customerDto.Id }, customerDto);
@@ -75,6 +84,8 @@ namespace AlHafiz.Controllers
                 return NotFound();
 
             customer.Name = updateCustomerDto.Name;
+            customer.Description = updateCustomerDto.Description;
+            customer.PhoneNumber = updateCustomerDto.PhoneNumber;
             customer.UpdatedAt = DateTime.Now;
 
             await _customerRepository.UpdateAsync(customer);
@@ -101,7 +112,9 @@ namespace AlHafiz.Controllers
             var customersDto = customers.Select(c => new CustomerDto
             {
                 Id = c.Id,
-                Name = c.Name
+                Name = c.Name,
+                Description = c.Description,
+                PhoneNumber = c.PhoneNumber
             });
 
             return Ok(customersDto);

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AlHafiz.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250624213732_init")]
+    [Migration("20250802151509_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -144,10 +144,16 @@ namespace AlHafiz.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -155,6 +161,38 @@ namespace AlHafiz.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("AlHafiz.Models.CustomerItemRate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("CustomerItemRates");
                 });
 
             modelBuilder.Entity("AlHafiz.Models.ExpenseHead", b =>
@@ -327,6 +365,9 @@ namespace AlHafiz.Migrations
                     b.Property<decimal>("Weight")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<bool>("isTrackStock")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ItemId");
@@ -362,6 +403,25 @@ namespace AlHafiz.Migrations
                     b.Navigation("Bank");
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("AlHafiz.Models.CustomerItemRate", b =>
+                {
+                    b.HasOne("AlHafiz.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AlHafiz.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("AlHafiz.Models.Stock", b =>

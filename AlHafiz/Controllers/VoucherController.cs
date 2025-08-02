@@ -71,6 +71,7 @@ namespace AlHafiz.Controllers
                         DesiMan = item.DesiMan,
                         Rate = item.Rate,
                         Amount = item.Amount,
+                        isTrackStock = item.isTrackStock,
                         CreatedAt = DateTime.Now
                     });
                 }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AlHafiz.Migrations
 {
     /// <inheritdoc />
-    public partial class init2 : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -33,6 +33,8 @@ namespace AlHafiz.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -72,6 +74,29 @@ namespace AlHafiz.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "BalanceTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    PaymentType = table.Column<int>(type: "int", nullable: false),
+                    OpeningBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ClosingBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BalanceTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BalanceTransactions_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CashTransactions",
                 columns: table => new
                 {
@@ -85,7 +110,9 @@ namespace AlHafiz.Migrations
                     IsCashReceived = table.Column<bool>(type: "bit", nullable: false),
                     Details = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FromDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ToDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -117,7 +144,7 @@ namespace AlHafiz.Migrations
                     PaymentDetails = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     ExpenseHeadId = table.Column<int>(type: "int", nullable: true),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    GariNo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    GariNo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Details = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -143,6 +170,35 @@ namespace AlHafiz.Migrations
                         principalTable: "ExpenseHeads",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerItemRates",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    ItemId = table.Column<int>(type: "int", nullable: false),
+                    Rate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerItemRates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerItemRates_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CustomerItemRates_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -181,6 +237,7 @@ namespace AlHafiz.Migrations
                     DesiMan = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Rate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    isTrackStock = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -202,6 +259,11 @@ namespace AlHafiz.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_BalanceTransactions_CustomerId",
+                table: "BalanceTransactions",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CashTransactions_BankId",
                 table: "CashTransactions",
                 column: "BankId");
@@ -210,6 +272,16 @@ namespace AlHafiz.Migrations
                 name: "IX_CashTransactions_CustomerId",
                 table: "CashTransactions",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerItemRates_CustomerId",
+                table: "CustomerItemRates",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerItemRates_ItemId",
+                table: "CustomerItemRates",
+                column: "ItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Stocks_ItemId",
@@ -246,7 +318,13 @@ namespace AlHafiz.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "BalanceTransactions");
+
+            migrationBuilder.DropTable(
                 name: "CashTransactions");
+
+            migrationBuilder.DropTable(
+                name: "CustomerItemRates");
 
             migrationBuilder.DropTable(
                 name: "Stocks");

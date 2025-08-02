@@ -118,17 +118,24 @@ namespace AlHafiz.Services.Repository
 
                                 if (stock != null)
                                 {
-                                    stock.Quantity += item.NetWeight;
-                                    stock.UpdatedAt = DateTime.Now;
+                                    if (item.isTrackStock)
+                                    {
+                                        stock.Quantity += item.NetWeight;
+                                        stock.UpdatedAt = DateTime.Now;
+                                    }
                                 }
                                 else
                                 {
-                                    await _context.Stocks.AddAsync(new Stock
+                                    if (item.isTrackStock) 
+                                    { 
+
+                                     await _context.Stocks.AddAsync(new Stock
                                     {
                                         ItemId = item.ItemId,
                                         Quantity = item.NetWeight,
                                         CreatedAt = DateTime.Now
                                     });
+                                    }
                                 }
                             }
                         }

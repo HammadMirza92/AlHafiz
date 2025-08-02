@@ -141,10 +141,16 @@ namespace AlHafiz.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -355,6 +361,9 @@ namespace AlHafiz.Migrations
 
                     b.Property<decimal>("Weight")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("isTrackStock")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

@@ -73,8 +73,13 @@ namespace AlHafiz.Services.Repository
         {
             var query = _context.CashTransactions
                 .Include(ct => ct.Customer)
-                .Include(ct => ct.Bank)
                 .AsQueryable();
+
+            // Only include bank if filtering doesn't explicitly exclude null BankId (optional logic)
+            if (!_context.CashTransactions.Any(c => c.BankId == null)) // OR use some flag in DTO
+            {
+                query = query.Include(ct => ct.Bank);
+            }
 
             if (filter.FromDate.HasValue)
                 query = query.Where(ct => ct.CreatedAt >= filter.FromDate.Value);
@@ -93,5 +98,6 @@ namespace AlHafiz.Services.Repository
 
             return await query.ToListAsync();
         }
+
     }
 }
