@@ -20,6 +20,7 @@ namespace AlHafiz.AppDbContext
         public DbSet<CashTransaction> CashTransactions { get; set; }
         public DbSet<BalanceTransaction> BalanceTransactions { get; set; }
         public DbSet<CustomerItemRate> CustomerItemRates { get; set; }
+        public DbSet<Projects> Projects { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

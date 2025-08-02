@@ -31,6 +31,7 @@ builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<ICashTransactionRepository, CashTransactionRepository>();
 builder.Services.AddScoped<ICustomerItemRateRepository, CustomerItemRateRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
 // Add CORS
 builder.Services.AddCors(options =>
