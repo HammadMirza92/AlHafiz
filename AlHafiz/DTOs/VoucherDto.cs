@@ -33,6 +33,7 @@ namespace AlHafiz.DTOs
         public decimal? Amount { get; set; }
         public string? GariNo { get; set; }
         public string Details { get; set; }
+        public string CreatedAt { get; set; }
         public List<CreateVoucherItemDto> VoucherItems { get; set; }
     }
 
@@ -47,6 +48,7 @@ namespace AlHafiz.DTOs
         public decimal? Amount { get; set; }
         public string? GariNo { get; set; }
         public string Details { get; set; }
+        public string CreatedAt { get; set; }
         public List<UpdateVoucherItemDto> VoucherItems { get; set; }
     }
 

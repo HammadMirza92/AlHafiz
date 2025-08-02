@@ -53,7 +53,7 @@ namespace AlHafiz.Controllers
                 Amount = createVoucherDto.Amount,
                 GariNo = createVoucherDto.GariNo,
                 Details = createVoucherDto.Details,
-                CreatedAt = DateTime.Now
+                CreatedAt = !string.IsNullOrEmpty(createVoucherDto.CreatedAt) ? DateTime.Parse(createVoucherDto.CreatedAt) : DateTime.Now,
             };
 
             var voucherItems = new List<VoucherItem>();
@@ -72,7 +72,7 @@ namespace AlHafiz.Controllers
                         Rate = item.Rate,
                         Amount = item.Amount,
                         isTrackStock = item.isTrackStock,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = !string.IsNullOrEmpty(createVoucherDto.CreatedAt) ? DateTime.Parse(createVoucherDto.CreatedAt) : DateTime.Now,
                     });
                 }
             }
@@ -103,7 +103,8 @@ namespace AlHafiz.Controllers
                 ExpenseHeadId = updateVoucherDto.ExpenseHeadId,
                 Amount = updateVoucherDto.Amount,
                 GariNo = updateVoucherDto.GariNo,
-                Details = updateVoucherDto.Details
+                Details = updateVoucherDto.Details,
+                CreatedAt = !string.IsNullOrEmpty(updateVoucherDto.CreatedAt) ? DateTime.Parse(updateVoucherDto.CreatedAt) : DateTime.Now,
             };
 
             var voucherItems = new List<VoucherItem>();
@@ -123,7 +124,7 @@ namespace AlHafiz.Controllers
                         DesiMan = item.DesiMan,
                         Rate = item.Rate,
                         Amount = item.Amount,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = !string.IsNullOrEmpty(updateVoucherDto.CreatedAt) ? DateTime.Parse(updateVoucherDto.CreatedAt) : DateTime.Now,
                     });
                 }
             }
